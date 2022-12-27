@@ -10,7 +10,10 @@ dst = 'C:\opt\jdk'
 if not JAVA_HOME in os.environ:
     setEnv(keyname=JAVA_HOME, keyvalue=dst)
     os.symlink(src, dst)
-else:
+    print('1.Enlace creado')
+elif not os.path.islink(dst):
     os.symlink(src, dst)
-
-print('Enlace creado')
+    print('2.Enlace creado')
+else:
+    print('3.El enlace ya existe')
+    os.unlink(dst)
