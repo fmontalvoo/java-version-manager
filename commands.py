@@ -24,7 +24,7 @@ def list_jdk():
     for key, _ in config.items():
         if key == 'current':
             continue
-        if config['current'] == key:
+        if 'current' in config and config['current'] == key:
             click.secho(f'* {key} (actual)', fg='green')
         else:
             click.echo(f'  {key}')
