@@ -3,32 +3,62 @@ import os
 import click
 
 from set_env import setEnv
+from manage_config import read_config, write_config
 
 JAVA_HOME = 'JAVA_HOME'
 
 JDK_DST = 'C:\opt\jdk'
 
 def add_jdk(jdk_src):
-    print(jdk_src)
+    version_name = jdk_src.split('\\')[-1]
+    config_file = read_config()
+    if version_name in config_file:
+        click.secho('Ya existe una version con ese nombre', fg='yellow')
+    else:
+        config_file[version_name] = jdk_src
+        write_config(config_file)
+        click.secho('JDK agregado', fg='green')
 
 def list_jdk():
-    print('Listando jdk')
+    config = read_config()
+    for key, _ in config.items():
+        if key == 'current':
+            continue
+        if config['current'] == key:
+            click.secho(f'* {key} (actual)', fg='green')
+        else:
+            click.echo(f'  {key}')
 
 def use_jdk(jdk):
-    if not JAVA_HOME in os.environ:
-        setEnv(keyname=JAVA_HOME, keyvalue=JDK_DST)
-        os.symlink(jdk, JDK_DST)
-        click.echo('1.JDK modificado')
-    elif not os.path.islink(JDK_DST):
-        os.symlink(jdk, JDK_DST)
-        click.echo('2.JDK modificado')
+    config_file = read_config()
+    if jdk in config_file:
+        jdk_path = config_file[jdk]
+        if not JAVA_HOME in os.environ:
+            setEnv(keyname=JAVA_HOME, keyvalue=JDK_DST)
+            os.symlink(jdk_path, JDK_DST)
+        elif not os.path.islink(JDK_DST):
+            os.symlink(jdk_path, JDK_DST)
+        else:
+            os.unlink(JDK_DST)
+            os.symlink(jdk_path, JDK_DST)
+        
+        config_file['current'] = jdk
+        write_config(config_file)
+        click.secho(f'Usando {jdk}', fg='blue')
     else:
-        os.unlink(JDK_DST)
-        os.symlink(jdk, JDK_DST)
-        click.echo('3.JDK modificado')
+        click.secho('No existe el jdk', fg='red')
 
 def delete_jdk(jdk):
-    print(jdk)
+    config_file = read_config()
+    if jdk in config_file:
+        if jdk == config_file['current']:
+            click.secho('No puedes eliminar la version actual', fg='yellow')
+        else:
+            del config_file[jdk]
+            write_config(config_file)
+            click.secho(f'Eliminado {jdk}', fg='green')
+    else:
+        click.secho('No existe el jdk', fg='red')
 
 @click.command()
 @click.option('-a','--add', type=str, help='Agrega la ruta al sdk de java; ejemplo: -a "path:\\to\\jdk"')
