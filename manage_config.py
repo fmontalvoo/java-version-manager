@@ -1,7 +1,7 @@
 import os
 import json
 
-CONFIG_FILE = 'config.json'
+CONFIG_FILE = f"{os.environ['USERPROFILE']}\config.json"
 
 def write_config(config):
     with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
